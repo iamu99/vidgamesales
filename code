@@ -1,0 +1,86 @@
+games = read.csv("/Users/sadiamubarik/Desktop/vgsales.csv")
+View(games)
+
+# find out the number of unique categories for vidgames
+noOfPublishers <- length(unique(games$Publisher))
+
+# count the most frequently occuring publishers
+frequencyOfpublishers = games %>% 
+  count(Publisher) %>% 
+  arrange(desc(n))
+
+# Publisher    n
+# 1                          Electronic Arts 1351
+# 2                               Activision  975
+# 3                       Namco Bandai Games  932
+# 4                                  Ubisoft  921
+# 5             Konami Digital Entertainment  832
+
+# create dummy variables for most frequently occuring publishers
+# X1 is 1 if publisher is electronic arts
+X1 = 1*( games[ ,"Publisher"] == "Electronic Arts" )
+
+# X2 is 1 if publisher is Activision
+X2 = 1*( games[ ,"Publisher"] == "Activision" )
+
+# X3 is 1 if publisher is Namco Bandai Games
+X3 = 1*( games[ ,"Publisher"] == "Namco Bandai Games" )
+
+# X4 is 1 if publisher is Ubisoft
+X4 = 1*( games[ ,"Publisher"] == "Ubisoft" )
+
+# X5 is 1 if publisher is Konami Digital Entertainment
+X5 = 1*( games[ ,"Publisher"] == "Konami Digital Entertainment" )
+
+Y1 = games[ ,"Global_Sales"]
+# Y1 = games[ ,"EU_Sales"] second iteration
+# Y1 = games[ ,"JP_Sales"] third iteration
+n = length(Y1)
+
+  
+  
+  # Construct the likelihood function
+  likelihood_function <- function(para, Y, X1, X2, X3, X4, X5){
+    beta0 = para[1]
+    beta1 = para[2]
+    beta2 = para[3]
+    beta3 = para[4]
+    beta4 = para[5]
+    beta5 = para[6]
+    sigma2 = para[7]
+    likelihood = -0.5*log(2*3.14159)
+    likelihood = likelihood - 0.5*log(sigma2)
+    likelihood = likelihood - 0.5*sum((Y1-beta0-(beta1*X1)-(beta2*X2)-
+                                         (beta3*X3)-(beta4*X4)- (beta5*X5)
+    )^2/sigma2)
+    return( -1*likelihood )
+  }
+  # Run the MLE
+  initial_para = c(0,0,0,0,0,0,1)
+  nlm_results = nlm(likelihood_function, initial_para, Y1, X1, X2, X3, X4, X5, hessian=TRUE)
+  Estimates = nlm_results$estimate
+  AVar = solve(nlm_results$hessian)/n
+  StdErr = sqrt(diag(AVar))
+  
+  
+  # 95% CI for the effect of "Publisher" == "Electronic Arts" on (Global_sales/ EU_Sales/ JP_Sales)
+  
+  c(Estimates[2]-1.96*StdErr[2], Estimates[2]+1.96*StdErr[2])
+  
+  
+  # 95% CI for the effect of "Publisher" == "Activision" on (Global_sales/ EU_Sales/ JP_Sales)
+  c(Estimates[3]-1.96*StdErr[3], Estimates[3]+1.96*StdErr[3])
+  
+  
+  # 95% CI for the effect of "Publisher" == "Namco Bandai Games" on (Global_sales/ EU_Sales/ JP_Sales)
+  c(Estimates[4]-1.96*StdErr[4], Estimates[4]+1.96*StdErr[4])
+  
+  
+  # 95% CI for the effect of "Publisher" == "Ubisoft" on (Global_sales/ EU_Sales/ JP_Sales)
+  c(Estimates[5]-1.96*StdErr[5], Estimates[5]+1.96*StdErr[5])
+  
+  
+  # 95% CI for the effect of "Publisher" == "Konami Digital Entertainment" on (Global_sales/ EU_Sales/ JP_Sales)
+  c(Estimates[6]-1.96*StdErr[6], Estimates[6]+1.96*StdErr[6])
+  
+  
